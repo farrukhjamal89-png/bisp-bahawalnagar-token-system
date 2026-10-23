@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#087a45">
+<title>BISP Bahawalnagar Token System</title>
+<style>
+:root{--g:#087a45;--g2:#075c35;--bg:#f3f7f4;--line:#dce7df;--ink:#17231c;--muted:#68766d;--red:#a12a2a;--amber:#fff8e5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+header{background:var(--g);color:#fff;padding:17px 16px;box-shadow:0 2px 8px #0001}.brand{font-size:clamp(20px,4vw,27px);font-weight:800}.sub{font-size:14px;margin-top:3px}
+.wrap{max-width:1050px;margin:auto;padding:14px}.auth-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}.auth-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;width:min(100%,450px);box-shadow:0 10px 30px #1231}.logo{width:58px;height:58px;background:var(--g);color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:19px;margin:0 auto 12px}.auth-card h1,.auth-card .sub{text-align:center}.auth-card h1{font-size:21px;margin:8px 0}.auth-card .sub{color:var(--muted);margin-bottom:16px}
+button,input,select,textarea{font:inherit;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;width:100%;color:var(--ink)}button{background:var(--g);color:white;border:0;font-weight:700;cursor:pointer}button:hover{background:var(--g2)}button:disabled{opacity:.6;cursor:not-allowed}.alt{background:#e7f2eb;color:#075c35}.alt:hover{background:#d5eadd}.danger{background:var(--red)}.toolbar,.row,.actions{display:flex;gap:8px;align-items:center}.toolbar{justify-content:space-between;flex-wrap:wrap}.row>*{min-width:0}.actions>*{flex:1}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}nav button{font-size:13px;background:#e3eee7;color:#155b37;padding:10px 4px}nav button.active{background:var(--g);color:#fff}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:15px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{background:#f0f6f2;padding:13px;border-radius:12px}.num{font-size:25px;font-weight:800;color:var(--g)}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}.hint,.muted{font-size:12px;color:var(--muted)}.hidden{display:none!important}.badge{display:inline-block;background:#e7f2eb;color:#075c35;padding:4px 8px;border-radius:30px;font-size:11px}.warning{background:var(--amber);border:1px solid #f0d58a;color:#6b4e00;border-radius:10px;padding:10px;font-size:12px;line-height:1.5}.success{color:#146c43}.error{color:var(--red)}table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}.table-wrap{overflow:auto}.slip{border:1px dashed #63786a;padding:16px;max-width:390px;margin:10px auto;background:#fff}.slip h2{text-align:center;color:var(--g);margin:0;font-size:23px}.slip .office{text-align:center;font-weight:bold;margin-top:4px;font-size:13px}.slip .urdu-note{direction:rtl;text-align:center;font-size:15px;line-height:1.8;border-top:1px solid #ddd;margin-top:12px;padding-top:10px}.qr{display:flex;justify-content:center;margin:12px auto}.qr img{max-width:128px}.small{font-size:12px}.app-footer{text-align:center;color:var(--muted);font-size:11px;margin:18px 0 6px}
+@media(min-width:700px){nav{grid-template-columns:repeat(6,1fr)}.grid{grid-template-columns:repeat(4,1fr)}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+@media print{header,nav,.toolbar,.noPrint,.app-footer{display:none!important}body{background:#fff}.wrap{padding:0}.card{border:0;box-shadow:none}.slip{border:1px dashed #333}}
+</style>
+</head>
+<body>
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo">BISP</div>
+    <h1>BISP Bahawalnagar Token System</h1>
+    <div class="sub">District Office Bahawalnagar</div>
+    <div id="setupArea" class="hidden">
+      <h3>Create local admin login</h3>
+      <p class="hint">First-time setup on this browser/device only.</p>
+      <form id="setupForm">
+        <label for="setupUser">Admin username</label><input id="setupUser" autocomplete="username" required maxlength="40">
+        <label for="setupPass">Create password (minimum 8 characters)</label><input id="setupPass" type="password" autocomplete="new-password" minlength="8" required>
+        <label for="setupConfirm">Confirm password</label><input id="setupConfirm" type="password" autocomplete="new-password" minlength="8" required>
+        <button type="submit">Create local login</button>
+      </form>
+    </div>
+    <div id="loginArea" class="hidden">
+      <h3>Staff login</h3>
+      <form id="loginForm">
+        <label for="loginUser">Username</label><input id="loginUser" autocomplete="username" required>
+        <label for="loginPass">Password</label><input id="loginPass" type="password" autocomplete="current-password" required>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+    <p id="authMessage" class="hint" role="status"></p>
+    <div class="warning">Prototype notice: this login is only a local screen lock. Records are stored in this browser and are not protected by a secure server. Do not enter real beneficiaries' CNIC or personal data in this public prototype.</div>
+  </div>
+</div>
+<div id="appScreen" class="hidden">
+<header><div class="brand">BISP Bahawalnagar Token System</div><div class="sub">District Office Bahawalnagar</div></header>
+<main class="wrap">
+  <div class="toolbar noPrint"><span class="badge">Local prototype · browser storage</span><div class="row" style="width:min(100%,360px)"><select id="language" aria-label="Language"><option value="en">English</option><option value="ur">اردو</option></select><button class="alt" id="logoutBtn" style="width:auto;white-space:nowrap">Logout</button></div></div>
+  <div class="warning noPrint" style="margin-top:10px">Security: this static GitHub Pages version has no secure server/database. Login is a convenience lock only; do not store real beneficiary data until a private authenticated backend is configured.</div>
+  <nav class="noPrint">
+    <button class="active" data-page="home" data-en="Dashboard" data-ur="ڈیش بورڈ">Dashboard</button>
+    <button data-page="new" data-en="Registration" data-ur="رجسٹریشن">Registration</button>
+    <button data-page="list" data-en="Appointments" data-ur="اپائنٹمنٹس">Appointments</button>
+    <button data-page="find" data-en="Search" data-ur="تلاش">Search</button>
+    <button data-page="backup" data-en="Backup" data-ur="بیک اپ">Backup</button>
+    <button data-page="settings" data-en="Printer & Settings" data-ur="پرنٹر اور سیٹنگ">Printer & Settings</button>
+  </nav>
+  <section id="home">
+    <div class="grid">
+      <div class="stat"><div data-en="Daily appointment limit" data-ur="روزانہ اپائنٹمنٹ حد">Daily appointment limit</div><div class="num">65</div></div>
+      <div class="stat"><div data-en="Survey days" data-ur="سروے کے دن">Survey days</div><b data-en="Monday–Friday" data-ur="پیر تا جمعہ">Monday–Friday</b></div>
+      <div class="stat"><div data-en="Saved on this device" data-ur="اس ڈیوائس میں محفوظ">Saved on this device</div><div class="num" id="total">0</div></div>
+      <div class="stat"><div data-en="Next token" data-ur="اگلا ٹوکن">Next token</div><div class="num" id="next">BISP-00001</div></div>
+    </div>
+    <div class="card"><h3 data-en="Quick actions" data-ur="فوری کام">Quick actions</h3><button onclick="page('new')" data-en="New registration" data-ur="نئی رجسٹریشن">New registration</button></div>
+    <div class="card"><h3 data-en="Today's appointments" data-ur="آج کی اپائنٹمنٹس">Today's appointments</h3><p id="todayCount" class="num">0</p><p class="hint" data-en="Appointments are limited to 65 per date; weekends are not available." data-ur="ہر تاریخ پر 65 اپائنٹمنٹ تک؛ ہفتہ اور اتوار دستیاب نہیں۔">Appointments are limited to 65 per date; weekends are not available.</p></div>
+  </section>
+  <section id="new" class="hidden">
+    <div class="card"><h3 data-en="New registration" data-ur="نئی رجسٹریشن">New registration</h3>
+      <p class="hint" data-en="Prototype only — use fictional test data." data-ur="صرف نمونے کے لیے — فرضی معلومات استعمال کریں۔">Prototype only — use fictional test data.</p>
+      <label for="nm" data-en="Beneficiary name" data-ur="مستحقہ کا نام">Beneficiary name</label><input id="nm" autocomplete="off" maxlength="100">
+      <label for="cn" data-en="CNIC (13 digits)" data-ur="شناختی کارڈ نمبر (13 ہندسے)">CNIC (13 digits)</label><input id="cn" inputmode="numeric" autocomplete="off" maxlength="15" placeholder="00000-0000000-0">
+      <label for="ph" data-en="Mobile number" data-ur="موبائل نمبر">Mobile number</label><input id="ph" inputmode="tel" autocomplete="off" maxlength="15" placeholder="03XXXXXXXXX">
+      <div class="two-col"><div><label for="issueDate" data-en="Token issuance date" data-ur="ٹوکن جاری کرنے کی تاریخ">Token issuance date</label><input id="issueDate" type="date"></div><div><label for="visitDate" data-en="Visit / appointment date" data-ur="آنے / اپائنٹمنٹ کی تاریخ">Visit / appointment date</label><input id="visitDate" type="date"></div></div>
+      <p class="hint" data-en="Appointment date must be today or later, Monday–Friday, with a maximum of 65 records per date." data-ur="اپائنٹمنٹ آج یا بعد کی تاریخ، پیر تا جمعہ، ہر تاریخ پر زیادہ سے زیادہ 65 ریکارڈ۔">Appointment date must be today or later, Monday–Friday, with a maximum of 65 records per date.</p>
+      <p id="err" class="hint error" role="alert"></p><button id="saveBtn" data-en="Save & generate token" data-ur="محفوظ کریں اور ٹوکن بنائیں">Save & generate token</button>
+    </div><div id="newSlip" class="card hidden"></div>
+  </section>
+  <section id="list" class="hidden"><div class="card">
+    <h3 data-en="Appointment register" data-ur="اپائنٹمنٹ رجسٹر">Appointment register</h3><div class="row"><input type="date" id="filter" aria-label="Filter date"><button class="alt" id="filterBtn" data-en="Filter" data-ur="فلٹر">Filter</button><button class="alt" id="clearFilterBtn" data-en="Clear" data-ur="صاف کریں">Clear</button></div>
+    <div class="actions noPrint" style="margin:10px 0"><button id="excelBtn" data-en="Download Excel" data-ur="ایکسِل ڈاؤن لوڈ">Download Excel</button><button class="alt" id="csvBtn" data-en="Download CSV" data-ur="CSV ڈاؤن لوڈ">Download CSV</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Token</th><th>Name</th><th>CNIC (masked)</th><th>Issue date</th><th>Visit date</th><th>Status</th><th class="noPrint">Actions</th></tr></thead><tbody id="rows"></tbody></table></div><p id="empty" class="hint"></p>
+  </div></section>
+  <section id="find" class="hidden"><div class="card"><h3 data-en="Search beneficiary" data-ur="مستحقہ تلاش کریں">Search beneficiary</h3><input id="q" autocomplete="off" placeholder="Token / name / CNIC"><button id="searchBtn" style="margin-top:8px" data-en="Search" data-ur="تلاش">Search</button><div id="results"></div></div></section>
+  <section id="backup" class="hidden"><div class="card"><h3 data-en="Backup & recovery" data-ur="بیک اپ اور بحالی">Backup & recovery</h3><p class="hint" data-en="Export a JSON backup regularly and keep it securely. Import restores data in this browser only." data-ur="JSON بیک اپ نکال کر محفوظ رکھیں۔ امپورٹ اسی براؤزر میں ریکارڈ بحال کرتا ہے۔">Export a JSON backup regularly and keep it securely. Import restores data in this browser only.</p><div class="actions"><button id="exportBtn" data-en="Export backup" data-ur="بیک اپ نکالیں">Export backup</button><button class="alt" id="importBtn" data-en="Import backup" data-ur="بیک اپ بحال کریں">Import backup</button></div><input id="file" type="file" accept="application/json" class="hidden"><p id="msg" class="hint" role="status"></p><div class="warning">Backup files may contain full CNIC values. Keep them in an access-controlled location; do not upload them to this public GitHub repository.</div></div></section>
+  <section id="settings" class="hidden"><div class="card"><h3 data-en="Bluetooth thermal printer" data-ur="بلوٹوتھ تھرمل پرنٹر">Bluetooth thermal printer</h3><p class="hint">This attempts Web Bluetooth Low Energy (BLE) printers with a writable GATT characteristic. Many budget thermal printers use Bluetooth Classic/SPP and cannot be directly controlled by a web page; use the Android print dialog/native print app for those models.</p><div class="actions"><button id="connectPrinterBtn">Connect Bluetooth printer</button><button class="alt" id="disconnectPrinterBtn">Disconnect</button></div><p id="printerStatus" class="hint" role="status">Printer not connected.</p><div class="actions"><button class="alt" id="testPrinterBtn">Print test receipt</button><button class="alt" id="browserPrintHelpBtn">Browser print help</button></div><div class="warning" style="margin-top:12px">For a real Bluetooth printer, exact support depends on the printer model and its BLE/ESC-POS protocol. If connection fails, send the printer model name/photo so the correct method can be chosen. Browser print is the fallback.</div></div>
+    <div class="card"><h3>Login settings</h3><p class="hint">Login credentials are stored only in this browser. This is not a production authentication system and cannot protect records from someone with technical access to the device or source code.</p><button class="danger" id="resetLoginBtn">Reset local login (signs you out)</button></div>
+  </section>
+  <div class="app-footer">BISP Bahawalnagar Token System · District Office Bahawalnagar · Prototype only</div>
+</main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+'use strict';
+const ADMIN_KEY='bisp_bwn_local_admin_v1', SESSION_KEY='bisp_bwn_local_session_v1', DATA_KEY='bisp_bwn_token_records_v3';
+const MAX_PER_DAY=65;
+let records=loadRecords(), lang='en', printerDevice=null, printerCharacteristic=null;
+const KNOWN_BLE_SERVICES=[
+ '0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb',
+ '0000ffb0-0000-1000-8000-00805f9b34fb','000018f0-0000-1000-8000-00805f9b34fb',
+ '0000ae30-0000-1000-8000-00805f9b34fb','6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+ '49535343-fe7d-4ae5-8fa9-9fafd205e455','0000180a-0000-1000-8000-00805f9b34fb'
+];
+function loadRecords(){try{const v=JSON.parse(localStorage.getItem(DATA_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}}
+function token(n){return 'BISP-'+String(n).padStart(5,'0')}
+function nextSerial(){return records.reduce((m,r)=>Math.max(m,Number(r.serial)||0),0)+1}
+function isoToday(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function formatDate(s){if(!s)return '';return new Date(s+'T12:00:00').toLocaleDateString(lang==='ur'?'ur-PK':'en-GB',{day:'2-digit',month:'short',year:'numeric'})}
+function isWeekday(s){if(!s)return false;const n=new Date(s+'T12:00:00').getDay();return n>=1&&n<=5}
+function nextSurveyDay(){let d=new Date(isoToday()+'T12:00:00');while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function maskCnic(v){const d=String(v||'').replace(/\D/g,'');return d.length===13?'*****-****'+d.slice(9,12)+'-'+d.slice(12):'*************'}
+function formatCnicField(input){let d=input.value.replace(/\D/g,'').slice(0,13);if(d.length>12)d=d.slice(0,13);let s=d;if(d.length>5)s=d.slice(0,5)+'-'+d.slice(5,12)+(d.length>12?'-'+d.slice(12):'');input.value=s}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(records));refresh()}
+function countDate(s,excludeToken=null){return records.filter(r=>r.visitDate===s&&r.token!==excludeToken).length}
+function dateValidation(s,exclude=null){if(!s)return 'Please select an appointment date.';if(s<isoToday())return 'Past dates are not allowed.';if(!isWeekday(s))return lang==='ur'?'آنے کی تاریخ پیر سے جمعہ کے درمیان ہونی چاہیے۔':'Appointment date must be Monday to Friday.';if(countDate(s,exclude)>=MAX_PER_DAY)return `The ${MAX_PER_DAY}-appointment daily limit has been reached for this date.`;return ''}
+function page(id){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='list')renderList()}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
+function refresh(){document.getElementById('total').textContent=records.length;document.getElementById('next').textContent=token(nextSerial());document.getElementById('todayCount').textContent=countDate(isoToday())}
+function setLang(v){lang=v;document.documentElement.dir=v==='ur'?'rtl':'ltr';document.querySelectorAll('[data-en][data-ur]').forEach(e=>e.textContent=v==='ur'?e.dataset.ur:e.dataset.en);document.getElementById('subtitle')&&(document.getElementById('subtitle').textContent=v==='ur'?'ضلع دفتر بہاولنگر':'District Office Bahawalnagar');refresh()}
+document.getElementById('language').addEventListener('change',e=>setLang(e.target.value));
+function setAuthState(){const admin=localStorage.getItem(ADMIN_KEY);document.getElementById('setupArea').classList.toggle('hidden',!!admin);document.getElementById('loginArea').classList.toggle('hidden',!admin)}
+async function hashPassword(p){if(!window.crypto?.subtle)throw new Error('Secure password hashing requires HTTPS, such as GitHub Pages.');const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p));return [...new Uint8Array(bytes)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function showApp(){document.getElementById('authScreen').classList.add('hidden');document.getElementById('appScreen').classList.remove('hidden');initDates();refresh()}
+function showAuth(){document.getElementById('appScreen').classList.add('hidden');document.getElementById('authScreen').classList.remove('hidden');setAuthState()}
+document.getElementById('setupForm').addEventListener('submit',async e=>{e.preventDefault();const username=document.getElementById('setupUser').value.trim(),pass=document.getElementById('setupPass').value,confirmPass=document.getElementById('setupConfirm').value,msg=document.getElementById('authMessage');msg.textContent='';if(!username){msg.textContent='Enter a username.';return}if(pass.length<8){msg.textContent='Use at least 8 characters for the password.';return}if(pass!==confirmPass){msg.textContent='Passwords do not match.';return}try{localStorage.setItem(ADMIN_KEY,JSON.stringify({username,hash:await hashPassword(pass)}));sessionStorage.setItem(SESSION_KEY,'1');showApp()}catch(err){msg.textContent=err.message||'Could not save login.'}});
+document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const msg=document.getElementById('authMessage');msg.textContent='';try{const admin=JSON.parse(localStorage.getItem(ADMIN_KEY)||'null'),username=document.getElementById('loginUser').value.trim(),pass=document.getElementById('loginPass').value;if(admin&&username===admin.username&&await hashPassword(pass)===admin.hash){sessionStorage.setItem(SESSION_KEY,'1');showApp()}else msg.textContent='Incorrect username or password.'}catch(err){msg.textContent=err.message||'Login failed.'}});
+document.getElementById('logoutBtn').addEventListener('click',()=>{sessionStorage.removeItem(SESSION_KEY);showAuth()});
+document.getElementById('resetLoginBtn').addEventListener('click',()=>{if(confirm('Remove the local login credentials and sign out? Existing appointment records will remain on this browser.')){localStorage.removeItem(ADMIN_KEY);sessionStorage.removeItem(SESSION_KEY);showAuth()}});
+function initDates(){document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay();document.getElementById('visitDate').min=isoToday();}
+document.getElementById('issueDate').addEventListener('change',()=>{let d=document.getElementById('issueDate').value||isoToday();if(d<isoToday())d=isoToday();const x=new Date(d+'T12:00:00');while(x.getDay()===0||x.getDay()===6)x.setDate(x.getDate()+1);document.getElementById('visitDate').value=x.toISOString().slice(0,10)});
+document.getElementById('cn').addEventListener('input',e=>formatCnicField(e.target));
+document.getElementById('saveBtn').addEventListener('click',add);
+function add(){const name=document.getElementById('nm').value.trim(),cnic=document.getElementById('cn').value.replace(/\D/g,''),phone=document.getElementById('ph').value.trim(),issue=document.getElementById('issueDate').value,visit=document.getElementById('visitDate').value,err=document.getElementById('err');err.textContent='';if(!name||cnic.length!==13||!phone||!issue||!visit){err.textContent='Enter name, valid 13-digit CNIC, mobile number and both dates.';return}if(records.some(r=>String(r.cnic).replace(/\D/g,'')===cnic)){err.textContent='This CNIC already exists in this browser’s records.';return}const v=dateValidation(visit);if(v){err.textContent=v;return}const serial=nextSerial(),r={serial,token:token(serial),name,cnic,phone,issueDate:issue,visitDate:visit,status:'Booked',created:new Date().toISOString()};records.push(r);persist();const box=document.getElementById('newSlip');box.classList.remove('hidden');showSlip(r,box);['nm','cn','ph'].forEach(id=>document.getElementById(id).value='');document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay()}
+function slipHTML(r,forPrint=false,qrDataUrl=''){const qr=qrDataUrl?`<img alt="Token QR" src="${qrDataUrl}" style="width:115px;height:115px">`:`<div class="qr" id="qr-${esc(r.token)}"></div>`;return `<div class="slip"><h2>BISP</h2><div class="office">District Office Bahawalnagar</div><p style="text-align:center;font-weight:bold">Appointment / Survey Token</p><hr><p><b>Token:</b> ${esc(r.token)}</p><p><b>Beneficiary name:</b> ${esc(r.name)}</p><p><b>CNIC:</b> ${esc(maskCnic(r.cnic))}</p><p><b>Token issue date:</b> ${esc(formatDate(r.issueDate))}</p><p><b>Appointment date:</b> <strong>${esc(formatDate(r.visitDate))}</strong></p>${qr}<p class="hint" style="text-align:center">Scan QR for token and appointment date only.</p><div class="urdu-note">اس ٹوکن کی کوئی فیس نہیں ہے۔ شکایت کی صورت میں دفتر سے رابطہ کریں۔</div></div>${forPrint?'':`<div class="actions noPrint"><button onclick="printSlip('${esc(r.token)}')">Print appointment slip</button><button class="alt" onclick="printThermal('${esc(r.token)}')">Print to Bluetooth thermal</button></div>`}`}
+function showSlip(r,target){target.innerHTML=slipHTML(r);drawQR(r,target)}
+function drawQR(r,target){const el=target.querySelector(`#qr-${CSS.escape(r.token)}`);if(el&&window.QRCode)new QRCode(el,{text:`BISP Token: ${r.token}\nIssue date: ${r.issueDate}\nVisit date: ${r.visitDate}`,width:128,height:128});else if(el)el.textContent='QR needs internet access.'}
+async function createQrData(r){const temp=document.createElement('div');temp.style.cssText='position:fixed;left:-10000px;top:0;background:#fff';temp.innerHTML=`<div id="qr-temp"></div>`;document.body.appendChild(temp);let src='';try{if(window.QRCode){new QRCode(temp.querySelector('#qr-temp'),{text:`BISP Token: ${r.token}\nIssue date: ${r.issueDate}\nVisit date: ${r.visitDate}`,width:128,height:128});await new Promise(res=>setTimeout(res,250));const q=temp.querySelector('img');if(q)src=q.src;else{const c=temp.querySelector('canvas');if(c)src=c.toDataURL('image/png')}}}finally{temp.remove()}return src}
+async function printSlip(tok){const r=records.find(x=>x.token===tok);if(!r)return;if(printerCharacteristic){await printThermal(tok);return}const qr=await createQrData(r);const w=window.open('','_blank','width=430,height=700');if(!w){alert('Allow pop-ups to print the appointment slip.');return}w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>BISP Token ${esc(r.token)}</title><style>body{font:14px Arial;padding:10px}.slip{border:1px dashed #555;padding:12px;max-width:340px;margin:auto}.slip h2{text-align:center;color:#087a45;margin:0}.office{text-align:center;font-weight:bold;font-size:12px}.qr{text-align:center;margin:10px}.qr img{width:115px;height:115px}.urdu-note{direction:rtl;text-align:center;line-height:1.8;border-top:1px solid #ddd;padding-top:8px;margin-top:10px}.hint{font-size:11px;text-align:center}</style></head><body>${slipHTML(r,true,qr)}<script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);w.document.close()}
+function renderList(){const f=document.getElementById('filter').value,a=records.filter(r=>!f||r.visitDate===f).sort((x,y)=>x.visitDate.localeCompare(y.visitDate)||x.serial-y.serial);document.getElementById('rows').innerHTML=a.map(r=>`<tr><td>${esc(r.token)}</td><td>${esc(r.name)}</td><td>${esc(maskCnic(r.cnic))}</td><td>${esc(r.issueDate)}</td><td>${esc(r.visitDate)}</td><td>${esc(r.status)}</td><td class="noPrint"><button class="alt" onclick="editRecord('${esc(r.token)}')">Edit date</button><button onclick="printSlip('${esc(r.token)}')">Print</button></td></tr>`).join('');document.getElementById('empty').textContent=a.length?'':'No records found.'}
+document.getElementById('filterBtn').addEventListener('click',renderList);document.getElementById('clearFilterBtn').addEventListener('click',()=>{document.getElementById('filter').value='';renderList()});
+function editRecord(tok){const r=records.find(x=>x.token===tok);if(!r)return;const v=prompt('New appointment date (YYYY-MM-DD)',r.visitDate);if(v===null)return;const e=dateValidation(v,tok);if(e){alert(e);return}r.visitDate=v;persist();renderList();alert('Appointment date updated.')}
+document.getElementById('searchBtn').addEventListener('click',searchRecords);document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')searchRecords()});
+function searchRecords(){const q=document.getElementById('q').value.trim().toLowerCase(),digits=q.replace(/\D/g,''),a=records.filter(r=>r.token.toLowerCase().includes(q)||r.name.toLowerCase().includes(q)||String(r.cnic).includes(digits));const el=document.getElementById('results');el.innerHTML='';if(!a.length){el.textContent='No records found.';return}a.forEach(r=>{const d=document.createElement('div');d.className='card';el.appendChild(d);showSlip(r,d)})}
+function rowsForExport(){return records.map(r=>({'Token Number':r.token,'Beneficiary Name':r.name,'CNIC':r.cnic,'Mobile Number':r.phone,'Token Issuance Date':r.issueDate,'Date of Visit':r.visitDate,'Status':r.status,'Created At':r.created}))}
+document.getElementById('excelBtn').addEventListener('click',downloadExcel);document.getElementById('csvBtn').addEventListener('click',downloadCsv);
+function downloadExcel(){if(!window.XLSX){alert('Excel library unavailable; use Download CSV.');return}const ws=XLSX.utils.json_to_sheet(rowsForExport()),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'BISP Appointments');XLSX.writeFile(wb,'BISP_Bahawalnagar_Token_Register.xlsx')}
+function downloadCsv(){const rows=rowsForExport(),keys=Object.keys(rows[0]||{'Token Number':''}),csv=[keys.join(','),...rows.map(r=>keys.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='BISP_Bahawalnagar_Token_Register.csv';a.click();URL.revokeObjectURL(a.href)}
+document.getElementById('exportBtn').addEventListener('click',exportBackup);document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('file').click());
+function exportBackup(){const b=new Blob([JSON.stringify({app:'BISP Bahawalnagar Token System',version:3,exported:new Date().toISOString(),records},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='BISP_Bahawalnagar_Backup_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href);document.getElementById('msg').textContent='Backup downloaded.'}
+document.getElementById('file').addEventListener('change',async e=>{try{const f=e.target.files?.[0];if(!f)return;const o=JSON.parse(await f.text());if(!Array.isArray(o.records))throw new Error('Invalid backup');if(confirm('Replace current records with this backup?')){records=o.records;persist();document.getElementById('msg').textContent='Backup restored.'}}catch{document.getElementById('msg').textContent='Invalid backup file.'}e.target.value=''});
+function setPrinterStatus(m,err=false){const e=document.getElementById('printerStatus');e.textContent=m;e.classList.toggle('error',err);e.classList.toggle('success',!err)}
+document.getElementById('connectPrinterBtn').addEventListener('click',connectPrinter);document.getElementById('disconnectPrinterBtn').addEventListener('click',()=>{try{if(printerDevice?.gatt?.connected)printerDevice.gatt.disconnect()}catch{}printerDevice=null;printerCharacteristic=null;setPrinterStatus('Printer not connected.')});
+async function connectPrinter(){if(!navigator.bluetooth){setPrinterStatus('Web Bluetooth is not available here. On Android, use Chrome over HTTPS with a compatible BLE printer, or use the Android print service for Bluetooth Classic printers.',true);return}if(!window.isSecureContext){setPrinterStatus('Bluetooth requires a secure HTTPS page.',true);return}setPrinterStatus('Choose your printer in the Bluetooth picker...');try{const device=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:KNOWN_BLE_SERVICES});printerDevice=device;device.addEventListener('gattserverdisconnected',()=>{printerCharacteristic=null;setPrinterStatus('Printer disconnected.',true)});const server=await device.gatt.connect();let services=[];try{services=await server.getPrimaryServices()}catch{}let found=null;for(const service of services){try{const chars=await service.getCharacteristics();found=chars.find(c=>c.properties.write||c.properties.writeWithoutResponse);if(found)break}catch{}}if(!found){printerCharacteristic=null;setPrinterStatus(`Connected to ${device.name||'device'}, but no writable BLE print characteristic was found. It may be Bluetooth Classic/SPP or use a proprietary BLE protocol.`,true);return}printerCharacteristic=found;setPrinterStatus(`Connected to ${device.name||'Bluetooth printer'}. Use “Print to Bluetooth thermal” on a token.`)}catch(err){setPrinterStatus(err?.name==='NotFoundError'?'No printer selected.':`Could not connect: ${err.message||err}`,true)}}
+function concatBytes(...arrays){const size=arrays.reduce((n,a)=>n+a.length,0),out=new Uint8Array(size);let offset=0;for(const a of arrays){out.set(a,offset);offset+=a.length}return out}
+async function writePrinterBytes(bytes){if(!printerCharacteristic)throw new Error('Connect a compatible BLE thermal printer first.');for(let i=0;i<bytes.length;i+=20){const chunk=bytes.slice(i,i+20);if(printerCharacteristic.properties.writeWithoutResponse&&printerCharacteristic.writeValueWithoutResponse)await printerCharacteristic.writeValueWithoutResponse(chunk);else await printerCharacteristic.writeValue(chunk);await new Promise(r=>setTimeout(r,12))}}
+function thermalBytes(title,lines){const enc=new TextEncoder(),parts=[new Uint8Array([27,64]),new Uint8Array([27,97,1]),new Uint8Array([27,69,1]),enc.encode(title+'\n'),new Uint8Array([27,69,0]),enc.encode('District Office Bahawalnagar\n\n'),new Uint8Array([27,97,0]),enc.encode('--------------------------------\n'+lines.join('\n')+'\n\n\n'),new Uint8Array([29,86,0])];return concatBytes(...parts)}
+async function printThermal(tok){const r=records.find(x=>x.token===tok);if(!r){alert('Token record not found.');return}if(!printerCharacteristic){alert('Connect a compatible Bluetooth BLE thermal printer from Printer & Settings first. If your printer uses Bluetooth Classic, use Android print dialog/native ESC-POS app.');return}const lines=[`Token: ${r.token}`,`Name: ${r.name}`,`CNIC: ${maskCnic(r.cnic)}`,`Issue: ${formatDate(r.issueDate)}`,`Appointment: ${formatDate(r.visitDate)}`,'No fee is charged for this token.'];try{await writePrinterBytes(thermalBytes('BISP TOKEN',lines));setPrinterStatus('Print data sent to thermal printer. Check the paper output.')}catch(e){setPrinterStatus('Thermal print failed: '+(e.message||e),true);alert('Print failed. This printer may use a different protocol.') }}
+document.getElementById('testPrinterBtn').addEventListener('click',async()=>{if(!printerCharacteristic){alert('Connect a compatible BLE printer first.');return}try{await writePrinterBytes(thermalBytes('BISP PRINT TEST',['Printer connection test','District Office Bahawalnagar','If this printed, BLE text printing is working.']));setPrinterStatus('Test print sent. Check printer output.')}catch(e){setPrinterStatus('Test print failed: '+(e.message||e),true)}});
+document.getElementById('browserPrintHelpBtn').addEventListener('click',()=>alert('For a browser print: open a token and choose Print appointment slip. On Android, select your printer or print service in the system print dialog. Bluetooth Classic printers may need the manufacturer/ESC-POS Android app.'));
+// Keep the app session in this tab only. The login is a convenience gate, not secure server authentication.
+if(sessionStorage.getItem(SESSION_KEY)==='1'&&localStorage.getItem(ADMIN_KEY)){showApp()}else{showAuth()}
+</script>
+</body>
+</html>
