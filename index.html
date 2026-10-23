@@ -158,7 +158,30 @@ function setPrinterStatus(m,err=false){const e=document.getElementById('printerS
 document.getElementById('connectPrinterBtn').addEventListener('click',connectPrinter);document.getElementById('disconnectPrinterBtn').addEventListener('click',()=>{try{if(printerDevice?.gatt?.connected)printerDevice.gatt.disconnect()}catch{}printerDevice=null;printerCharacteristic=null;setPrinterStatus('Printer not connected.')});
 async function connectPrinter(){if(!navigator.bluetooth){setPrinterStatus('Web Bluetooth is not available here. On Android, use Chrome over HTTPS with a compatible BLE printer, or use the Android print service for Bluetooth Classic printers.',true);return}if(!window.isSecureContext){setPrinterStatus('Bluetooth requires a secure HTTPS page.',true);return}setPrinterStatus('Choose your printer in the Bluetooth picker...');try{const device=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:KNOWN_BLE_SERVICES});printerDevice=device;device.addEventListener('gattserverdisconnected',()=>{printerCharacteristic=null;setPrinterStatus('Printer disconnected.',true)});const server=await device.gatt.connect();let services=[];try{services=await server.getPrimaryServices()}catch{}let found=null;for(const service of services){try{const chars=await service.getCharacteristics();found=chars.find(c=>c.properties.write||c.properties.writeWithoutResponse);if(found)break}catch{}}if(!found){printerCharacteristic=null;setPrinterStatus(`Connected to ${device.name||'device'}, but no writable BLE print characteristic was found. It may be Bluetooth Classic/SPP or use a proprietary BLE protocol.`,true);return}printerCharacteristic=found;setPrinterStatus(`Connected to ${device.name||'Bluetooth printer'}. Use “Print to Bluetooth thermal” on a token.`)}catch(err){setPrinterStatus(err?.name==='NotFoundError'?'No printer selected.':`Could not connect: ${err.message||err}`,true)}}
 function concatBytes(...arrays){const size=arrays.reduce((n,a)=>n+a.length,0),out=new Uint8Array(size);let offset=0;for(const a of arrays){out.set(a,offset);offset+=a.length}return out}
-async function writePrinterBytes(bytes){if(!printerCharacteristic)throw new Error('Connect a compatible BLE thermal printer first.');for(let i=0;i<bytes.length;i+=20){const chunk=bytes.slice(i,i+20);if(printerCharacteristic.properties.writeWithoutResponse&&printerCharacteristic.writeValueWithoutResponse)await printerCharacteristic.writeValueWithoutResponse(chunk);else await printerCharacteristic.writeValue(chunk);await new Promise(r=>setTimeout(r,12))}}
+async function writePrinterBytes(bytes){
+  if(!printerCharacteristic)throw new Error('Connect a compatible BLE thermal printer first.');
+  // Prefer acknowledged writes when the printer supports them; they are more reliable for large QR bitmaps.
+  const acknowledged=!!(printerCharacteristic.properties.write&&typeof printerCharacteristic.writeValueWithResponse==='function');
+  const noResponse=!!(printerCharacteristic.properties.writeWithoutResponse&&typeof printerCharacteristic.writeValueWithoutResponse==='function');
+  if(!acknowledged&&!noResponse&&typeof printerCharacteristic.writeValue!=='function')throw new Error('Printer characteristic does not support writing.');
+  const chunkSize=20; // safe default BLE payload size for the default MTU
+  for(let i=0;i<bytes.length;i+=chunkSize){
+    const chunk=bytes.slice(i,i+chunkSize);
+    if(acknowledged){
+      await printerCharacteristic.writeValueWithResponse(chunk);
+      await new Promise(r=>setTimeout(r,8));
+    }else if(noResponse){
+      await printerCharacteristic.writeValueWithoutResponse(chunk);
+      // BLE no-response writes can overrun small thermal-printer buffers; pace each packet.
+      await new Promise(r=>setTimeout(r,35));
+    }else{
+      await printerCharacteristic.writeValue(chunk);
+      await new Promise(r=>setTimeout(r,25));
+    }
+  }
+  // Let the printer finish consuming the bitmap before another job is sent.
+  await new Promise(r=>setTimeout(r,700));
+}
 async function createQrRasterBytes(text){
   if(!window.QRCode) throw new Error('QR library is not loaded. Open the app while internet is available, then try again.');
   // Generate a larger QR image for 58mm thermal printers. Approx. 28mm print width.
