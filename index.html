@@ -61,13 +61,13 @@ nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}nav b
   </nav>
   <section id="home">
     <div class="grid">
-      <div class="stat"><div data-en="Daily appointment limit" data-ur="روزانہ اپائنٹمنٹ حد">Daily appointment limit</div><div class="num">65</div></div>
+      <div class="stat"><div data-en="Daily appointment limit" data-ur="روزانہ اپائنٹمنٹ حد">Daily appointment limit</div><div class="num">30</div></div>
       <div class="stat"><div data-en="Survey days" data-ur="سروے کے دن">Survey days</div><b data-en="Monday–Friday" data-ur="پیر تا جمعہ">Monday–Friday</b></div>
       <div class="stat"><div data-en="Saved on this device" data-ur="اس ڈیوائس میں محفوظ">Saved on this device</div><div class="num" id="total">0</div></div>
       <div class="stat"><div data-en="Next token" data-ur="اگلا ٹوکن">Next token</div><div class="num" id="next">BISP-00001</div></div>
     </div>
     <div class="card"><h3 data-en="Quick actions" data-ur="فوری کام">Quick actions</h3><button onclick="page('new')" data-en="New registration" data-ur="نئی رجسٹریشن">New registration</button></div>
-    <div class="card"><h3 data-en="Today's appointments" data-ur="آج کی اپائنٹمنٹس">Today's appointments</h3><p id="todayCount" class="num">0</p><p class="hint" data-en="Appointments are limited to 65 per date; weekends are not available." data-ur="ہر تاریخ پر 65 اپائنٹمنٹ تک؛ ہفتہ اور اتوار دستیاب نہیں۔">Appointments are limited to 65 per date; weekends are not available.</p></div>
+    <div class="card"><h3 data-en="Today's appointments" data-ur="آج کی اپائنٹمنٹس">Today's appointments</h3><p id="todayCount" class="num">0</p><p class="hint" data-en="Appointments are limited to 30 per date; weekends are not available." data-ur="ہر تاریخ پر زیادہ سے زیادہ 30 ٹوکن؛ ہفتہ اور اتوار دستیاب نہیں۔">Appointments are limited to 30 per date; weekends are not available.</p></div>
   </section>
   <section id="new" class="hidden">
     <div class="card"><h3 data-en="New registration" data-ur="نئی رجسٹریشن">New registration</h3>
@@ -76,7 +76,7 @@ nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}nav b
       <label for="cn" data-en="CNIC (13 digits)" data-ur="شناختی کارڈ نمبر (13 ہندسے)">CNIC (13 digits)</label><input id="cn" inputmode="numeric" autocomplete="off" maxlength="15" placeholder="00000-0000000-0">
       <label for="ph" data-en="Mobile number" data-ur="موبائل نمبر">Mobile number</label><input id="ph" inputmode="tel" autocomplete="off" maxlength="15" placeholder="03XXXXXXXXX">
       <div class="two-col"><div><label for="issueDate" data-en="Token issuance date" data-ur="ٹوکن جاری کرنے کی تاریخ">Token issuance date</label><input id="issueDate" type="date"></div><div><label for="visitDate" data-en="Visit / appointment date" data-ur="آنے / اپائنٹمنٹ کی تاریخ">Visit / appointment date</label><input id="visitDate" type="date"></div></div>
-      <p class="hint" data-en="Appointment date must be today or later, Monday–Friday, with a maximum of 65 records per date." data-ur="اپائنٹمنٹ آج یا بعد کی تاریخ، پیر تا جمعہ، ہر تاریخ پر زیادہ سے زیادہ 65 ریکارڈ۔">Appointment date must be today or later, Monday–Friday, with a maximum of 65 records per date.</p>
+      <p class="hint" data-en="Appointment date must be today or later, Monday–Friday, with a maximum of 30 records per date." data-ur="اپائنٹمنٹ آج یا بعد کی تاریخ، پیر تا جمعہ، ہر تاریخ پر زیادہ سے زیادہ 30 ریکارڈ۔">Appointment date must be today or later, Monday–Friday, with a maximum of 30 records per date.</p><p id="capacityHint" class="hint" role="status"></p>
       <p id="err" class="hint error" role="alert"></p><button id="saveBtn" data-en="Save & generate token" data-ur="محفوظ کریں اور ٹوکن بنائیں">Save & generate token</button>
     </div><div id="newSlip" class="card hidden"></div>
   </section>
@@ -97,7 +97,7 @@ nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}nav b
 <script>
 'use strict';
 const ADMIN_KEY='bisp_bwn_local_admin_v1', SESSION_KEY='bisp_bwn_local_session_v1', DATA_KEY='bisp_bwn_token_records_v3';
-const MAX_PER_DAY=65;
+const MAX_PER_DAY=30;
 let records=loadRecords(), lang='en', printerDevice=null, printerCharacteristic=null;
 const KNOWN_BLE_SERVICES=[
  '0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb',
@@ -111,13 +111,13 @@ function nextSerial(){return records.reduce((m,r)=>Math.max(m,Number(r.serial)||
 function isoToday(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
 function formatDate(s){if(!s)return '';return new Date(s+'T12:00:00').toLocaleDateString(lang==='ur'?'ur-PK':'en-GB',{day:'2-digit',month:'short',year:'numeric'})}
 function isWeekday(s){if(!s)return false;const n=new Date(s+'T12:00:00').getDay();return n>=1&&n<=5}
-function nextSurveyDay(){let d=new Date(isoToday()+'T12:00:00');while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function nextSurveyDay(start=isoToday()){let d=new Date(start+'T12:00:00');for(let i=0;i<370;i++){const s=d.toISOString().slice(0,10);if(d.getDay()!==0&&d.getDay()!==6&&countDate(s)<MAX_PER_DAY)return s;d.setDate(d.getDate()+1)}return isoToday()}
 function maskCnic(v){const d=String(v||'').replace(/\D/g,'');return d.length===13?'*****-****'+d.slice(9,12)+'-'+d.slice(12):'*************'}
 function formatCnicField(input){let d=input.value.replace(/\D/g,'').slice(0,13);if(d.length>12)d=d.slice(0,13);let s=d;if(d.length>5)s=d.slice(0,5)+'-'+d.slice(5,12)+(d.length>12?'-'+d.slice(12):'');input.value=s}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(records));refresh()}
 function countDate(s,excludeToken=null){return records.filter(r=>r.visitDate===s&&r.token!==excludeToken).length}
-function dateValidation(s,exclude=null){if(!s)return 'Please select an appointment date.';if(s<isoToday())return 'Past dates are not allowed.';if(!isWeekday(s))return lang==='ur'?'آنے کی تاریخ پیر سے جمعہ کے درمیان ہونی چاہیے۔':'Appointment date must be Monday to Friday.';if(countDate(s,exclude)>=MAX_PER_DAY)return `The ${MAX_PER_DAY}-appointment daily limit has been reached for this date.`;return ''}
+function dateValidation(s,exclude=null){if(!s)return 'Please select an appointment date.';if(s<isoToday())return 'Past dates are not allowed.';if(!isWeekday(s))return lang==='ur'?'آنے کی تاریخ پیر سے جمعہ کے درمیان ہونی چاہیے۔':'Appointment date must be Monday to Friday.';if(countDate(s,exclude)>=MAX_PER_DAY)return lang==='ur'?`اس تاریخ کے تمام ${MAX_PER_DAY} ٹوکن مکمل ہو چکے ہیں۔ براہِ کرم دوسری تاریخ منتخب کریں۔`:`This date is full (${countDate(s,exclude)}/${MAX_PER_DAY} tokens). Please select another appointment date.`;return ''}
 function page(id){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='list')renderList()}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
 function refresh(){document.getElementById('total').textContent=records.length;document.getElementById('next').textContent=token(nextSerial());document.getElementById('todayCount').textContent=countDate(isoToday())}
@@ -131,11 +131,13 @@ document.getElementById('setupForm').addEventListener('submit',async e=>{e.preve
 document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const msg=document.getElementById('authMessage');msg.textContent='';try{const admin=JSON.parse(localStorage.getItem(ADMIN_KEY)||'null'),username=document.getElementById('loginUser').value.trim(),pass=document.getElementById('loginPass').value;if(admin&&username===admin.username&&await hashPassword(pass)===admin.hash){sessionStorage.setItem(SESSION_KEY,'1');showApp()}else msg.textContent='Incorrect username or password.'}catch(err){msg.textContent=err.message||'Login failed.'}});
 document.getElementById('logoutBtn').addEventListener('click',()=>{sessionStorage.removeItem(SESSION_KEY);showAuth()});
 document.getElementById('resetLoginBtn').addEventListener('click',()=>{if(confirm('Remove the local login credentials and sign out? Existing appointment records will remain on this browser.')){localStorage.removeItem(ADMIN_KEY);sessionStorage.removeItem(SESSION_KEY);showAuth()}});
-function initDates(){document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay();document.getElementById('visitDate').min=isoToday();}
-document.getElementById('issueDate').addEventListener('change',()=>{let d=document.getElementById('issueDate').value||isoToday();if(d<isoToday())d=isoToday();const x=new Date(d+'T12:00:00');while(x.getDay()===0||x.getDay()===6)x.setDate(x.getDate()+1);document.getElementById('visitDate').value=x.toISOString().slice(0,10)});
+function updateCapacityHint(){const input=document.getElementById('visitDate'),hint=document.getElementById('capacityHint');if(!input||!hint)return;const s=input.value;if(!s){hint.textContent='';return}const used=countDate(s);const left=Math.max(0,MAX_PER_DAY-used);hint.textContent=lang==='ur'?`اس تاریخ پر ${used}/${MAX_PER_DAY} ٹوکن بک ہیں؛ باقی گنجائش: ${left}۔`:`Selected date: ${used}/${MAX_PER_DAY} tokens booked; ${left} slot(s) remaining.`}
+function initDates(){document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay();document.getElementById('visitDate').min=isoToday();updateCapacityHint()}
+document.getElementById('visitDate').addEventListener('change',e=>{const s=e.target.value,err=document.getElementById('err');err.textContent='';if(!s){updateCapacityHint();return}const problem=dateValidation(s);if(problem&&countDate(s)>=MAX_PER_DAY){err.textContent=problem;e.target.value='';updateCapacityHint();return}if(problem){err.textContent=problem;updateCapacityHint();return}updateCapacityHint()});
+document.getElementById('issueDate').addEventListener('change',()=>{let d=document.getElementById('issueDate').value||isoToday();if(d<isoToday())d=isoToday();const s=nextSurveyDay(d);document.getElementById('visitDate').value=s;document.getElementById('err').textContent='';updateCapacityHint()});
 document.getElementById('cn').addEventListener('input',e=>formatCnicField(e.target));
 document.getElementById('saveBtn').addEventListener('click',add);
-function add(){const name=document.getElementById('nm').value.trim(),cnic=document.getElementById('cn').value.replace(/\D/g,''),phone=document.getElementById('ph').value.trim(),issue=document.getElementById('issueDate').value,visit=document.getElementById('visitDate').value,err=document.getElementById('err');err.textContent='';if(!name||cnic.length!==13||!phone||!issue||!visit){err.textContent='Enter name, valid 13-digit CNIC, mobile number and both dates.';return}if(records.some(r=>String(r.cnic).replace(/\D/g,'')===cnic)){err.textContent='This CNIC already exists in this browser’s records.';return}const v=dateValidation(visit);if(v){err.textContent=v;return}const serial=nextSerial(),r={serial,token:token(serial),name,cnic,phone,issueDate:issue,visitDate:visit,status:'Booked',created:new Date().toISOString()};records.push(r);persist();const box=document.getElementById('newSlip');box.classList.remove('hidden');showSlip(r,box);['nm','cn','ph'].forEach(id=>document.getElementById(id).value='');document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay()}
+function add(){const name=document.getElementById('nm').value.trim(),cnic=document.getElementById('cn').value.replace(/\D/g,''),phone=document.getElementById('ph').value.trim(),issue=document.getElementById('issueDate').value,visit=document.getElementById('visitDate').value,err=document.getElementById('err');err.textContent='';if(!name||cnic.length!==13||!phone||!issue||!visit){err.textContent='Enter name, valid 13-digit CNIC, mobile number and both dates.';return}if(records.some(r=>String(r.cnic).replace(/\D/g,'')===cnic)){err.textContent='This CNIC already exists in this browser’s records.';return}const v=dateValidation(visit);if(v){err.textContent=v;return}const serial=nextSerial(),r={serial,token:token(serial),name,cnic,phone,issueDate:issue,visitDate:visit,status:'Booked',created:new Date().toISOString()};records.push(r);persist();const box=document.getElementById('newSlip');box.classList.remove('hidden');showSlip(r,box);['nm','cn','ph'].forEach(id=>document.getElementById(id).value='');document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay();updateCapacityHint()}
 function slipHTML(r,forPrint=false){
   return `<div class="slip">
     <h2>BISP</h2>
