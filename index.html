@@ -93,7 +93,6 @@ nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}nav b
   <div class="app-footer">BISP Bahawalnagar Token System · District Office Bahawalnagar · Prototype only</div>
 </main>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 'use strict';
@@ -137,11 +136,40 @@ document.getElementById('issueDate').addEventListener('change',()=>{let d=docume
 document.getElementById('cn').addEventListener('input',e=>formatCnicField(e.target));
 document.getElementById('saveBtn').addEventListener('click',add);
 function add(){const name=document.getElementById('nm').value.trim(),cnic=document.getElementById('cn').value.replace(/\D/g,''),phone=document.getElementById('ph').value.trim(),issue=document.getElementById('issueDate').value,visit=document.getElementById('visitDate').value,err=document.getElementById('err');err.textContent='';if(!name||cnic.length!==13||!phone||!issue||!visit){err.textContent='Enter name, valid 13-digit CNIC, mobile number and both dates.';return}if(records.some(r=>String(r.cnic).replace(/\D/g,'')===cnic)){err.textContent='This CNIC already exists in this browser’s records.';return}const v=dateValidation(visit);if(v){err.textContent=v;return}const serial=nextSerial(),r={serial,token:token(serial),name,cnic,phone,issueDate:issue,visitDate:visit,status:'Booked',created:new Date().toISOString()};records.push(r);persist();const box=document.getElementById('newSlip');box.classList.remove('hidden');showSlip(r,box);['nm','cn','ph'].forEach(id=>document.getElementById(id).value='');document.getElementById('issueDate').value=isoToday();document.getElementById('visitDate').value=nextSurveyDay()}
-function slipHTML(r,forPrint=false,qrDataUrl=''){const qr=qrDataUrl?`<img alt="Token QR" src="${qrDataUrl}" style="width:144px;height:144px">`:`<div class="qr" id="qr-${esc(r.token)}"></div>`;return `<div class="slip"><h2>BISP</h2><div class="office">District Office Bahawalnagar</div><p style="text-align:center;font-weight:bold">Appointment / Survey Token</p><hr><p><b>Token:</b> ${esc(r.token)}</p><p><b>Beneficiary name:</b> ${esc(r.name)}</p><p><b>CNIC:</b> ${esc(maskCnic(r.cnic))}</p><p><b>Token issue date:</b> ${esc(formatDate(r.issueDate))}</p><p><b>Appointment date:</b> <strong>${esc(formatDate(r.visitDate))}</strong></p>${qr}<p class="hint" style="text-align:center">Scan QR for token and appointment date only.</p><div class="urdu-note">اس ٹوکن کی کوئی فیس نہیں ہے۔ شکایت کی صورت میں دفتر سے رابطہ کریں۔</div></div>${forPrint?'':`<div class="actions noPrint"><button onclick="printSlip('${esc(r.token)}')">Print appointment slip</button><button class="alt" onclick="printThermal('${esc(r.token)}')">Print to Bluetooth thermal</button></div>`}`}
-function showSlip(r,target){target.innerHTML=slipHTML(r);drawQR(r,target)}
-function drawQR(r,target){const el=target.querySelector(`#qr-${CSS.escape(r.token)}`);if(el&&window.QRCode)new QRCode(el,{text:`BISP Token: ${r.token}\nIssue date: ${r.issueDate}\nVisit date: ${r.visitDate}`,width:128,height:128});else if(el)el.textContent='QR needs internet access.'}
-async function createQrData(r){const temp=document.createElement('div');temp.style.cssText='position:fixed;left:-10000px;top:0;background:#fff';temp.innerHTML=`<div id="qr-temp"></div>`;document.body.appendChild(temp);let src='';try{if(window.QRCode){new QRCode(temp.querySelector('#qr-temp'),{text:`BISP Token: ${r.token}\nIssue date: ${r.issueDate}\nVisit date: ${r.visitDate}`,width:128,height:128});await new Promise(res=>setTimeout(res,250));const q=temp.querySelector('img');if(q)src=q.src;else{const c=temp.querySelector('canvas');if(c)src=c.toDataURL('image/png')}}}finally{temp.remove()}return src}
-async function printSlip(tok){const r=records.find(x=>x.token===tok);if(!r)return;if(printerCharacteristic){await printThermal(tok);return}const qr=await createQrData(r);const w=window.open('','_blank','width=430,height=700');if(!w){alert('Allow pop-ups to print the appointment slip.');return}w.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BISP Token ${esc(r.token)}</title><style>@page{size:58mm auto;margin:0}*{box-sizing:border-box}html,body{width:58mm!important;margin:0!important;padding:0!important;background:#fff;font:10px Arial,sans-serif}.slip{box-sizing:border-box;width:58mm;max-width:58mm;margin:0;padding:2mm 5mm;border:0;background:#fff;font-size:10px;overflow-wrap:anywhere}.slip h2{text-align:center;color:#087a45;margin:0;font-size:16px}.office{text-align:center;font-weight:bold;font-size:10px;margin-top:2px}.slip p{margin:5px 0;line-height:1.3}.qr{text-align:center;margin:6px auto}.qr img{width:96px!important;height:96px!important;max-width:96px!important;max-height:96px!important}.urdu-note{direction:rtl;text-align:center;font-size:11px;line-height:1.5;border-top:1px solid #ddd;padding-top:6px;margin-top:6px}.hint{font-size:9px;text-align:center;margin:4px 0}</style></head><body>${slipHTML(r,true,qr)}<script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);w.document.close()}
+function slipHTML(r,forPrint=false){
+  return `<div class="slip">
+    <h2>BISP</h2>
+    <div class="office">District Office Bahawalnagar</div>
+    <p style="text-align:center;font-weight:bold">Appointment / Survey Token</p>
+    <hr>
+    <p><b>Token:</b> ${esc(r.token)}</p>
+    <p><b>Beneficiary name:</b> ${esc(r.name)}</p>
+    <p><b>CNIC:</b> ${esc(maskCnic(r.cnic))}</p>
+    <p><b>Token issue date:</b> ${esc(formatDate(r.issueDate))}</p>
+    <p><b>Appointment date:</b> <strong>${esc(formatDate(r.visitDate))}</strong></p>
+    <div class="urdu-note"><b>ضروری ہدایات برائے سروے</b><br>آپ اپنی مقررہ تاریخِ سروے پر صبح <b>08:00 بجے</b> دفتر پہنچیں۔ بچوں کے ب فارم اور اپنا اصل شناختی کارڈ (CNIC) لازماً ساتھ لائیں۔ بجلی کا بل، اگر موجود ہو، تو وہ بھی ساتھ لائیں۔</div>
+    <div class="urdu-note">اس ٹوکن کی کوئی فیس نہیں ہے۔ شکایت کی صورت میں دفتر سے رابطہ کریں۔</div>
+  </div>${forPrint?'':`<div class="actions noPrint"><button onclick="printSlip('${esc(r.token)}')">Print appointment slip</button><button class="alt" onclick="printThermal('${esc(r.token)}')">Print to Bluetooth thermal</button></div>`}`;
+}
+function showSlip(r,target){target.innerHTML=slipHTML(r)}
+async function printSlip(tok){
+  const r=records.find(x=>x.token===tok);
+  if(!r)return;
+  if(printerCharacteristic){await printThermal(tok);return}
+  const w=window.open('','_blank','width=430,height=700');
+  if(!w){alert('Allow pop-ups to print the appointment slip.');return}
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BISP Token ${esc(r.token)}</title><style>
+  @page{size:58mm auto;margin:0}
+  *{box-sizing:border-box}
+  html,body{width:58mm!important;margin:0!important;padding:0!important;background:#fff;font:10px Arial,sans-serif}
+  .slip{box-sizing:border-box;width:58mm;max-width:58mm;margin:0;padding:2mm 4mm;border:0;background:#fff;font-size:10px;overflow-wrap:anywhere}
+  .slip h2{text-align:center;color:#087a45;margin:0;font-size:16px}
+  .office{text-align:center;font-weight:bold;font-size:10px;margin-top:2px}
+  .slip p{margin:5px 0;line-height:1.3}
+  .urdu-note{direction:rtl;text-align:right;font-family:Arial,"Noto Naskh Arabic",sans-serif;font-size:11px;line-height:1.65;border-top:1px solid #ddd;padding-top:5px;margin-top:6px;unicode-bidi:plaintext}
+  </style></head><body>${slipHTML(r,true)}<script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);
+  w.document.close();
+}
 function renderList(){const f=document.getElementById('filter').value,a=records.filter(r=>!f||r.visitDate===f).sort((x,y)=>x.visitDate.localeCompare(y.visitDate)||x.serial-y.serial);document.getElementById('rows').innerHTML=a.map(r=>`<tr><td>${esc(r.token)}</td><td>${esc(r.name)}</td><td>${esc(maskCnic(r.cnic))}</td><td>${esc(r.issueDate)}</td><td>${esc(r.visitDate)}</td><td>${esc(r.status)}</td><td class="noPrint"><button class="alt" onclick="editRecord('${esc(r.token)}')">Edit date</button><button onclick="printSlip('${esc(r.token)}')">Print</button></td></tr>`).join('');document.getElementById('empty').textContent=a.length?'':'No records found.'}
 document.getElementById('filterBtn').addEventListener('click',renderList);document.getElementById('clearFilterBtn').addEventListener('click',()=>{document.getElementById('filter').value='';renderList()});
 function editRecord(tok){const r=records.find(x=>x.token===tok);if(!r)return;const v=prompt('New appointment date (YYYY-MM-DD)',r.visitDate);if(v===null)return;const e=dateValidation(v,tok);if(e){alert(e);return}r.visitDate=v;persist();renderList();alert('Appointment date updated.')}
@@ -160,7 +188,7 @@ async function connectPrinter(){if(!navigator.bluetooth){setPrinterStatus('Web B
 function concatBytes(...arrays){const size=arrays.reduce((n,a)=>n+a.length,0),out=new Uint8Array(size);let offset=0;for(const a of arrays){out.set(a,offset);offset+=a.length}return out}
 async function writePrinterBytes(bytes){
   if(!printerCharacteristic)throw new Error('Connect a compatible BLE thermal printer first.');
-  // Prefer acknowledged writes when the printer supports them; they are more reliable for large QR bitmaps.
+  // Prefer acknowledged writes when the printer supports them for reliable graphic transfer.
   const acknowledged=!!(printerCharacteristic.properties.write&&typeof printerCharacteristic.writeValueWithResponse==='function');
   const noResponse=!!(printerCharacteristic.properties.writeWithoutResponse&&typeof printerCharacteristic.writeValueWithoutResponse==='function');
   if(!acknowledged&&!noResponse&&typeof printerCharacteristic.writeValue!=='function')throw new Error('Printer characteristic does not support writing.');
@@ -182,38 +210,58 @@ async function writePrinterBytes(bytes){
   // Let the printer finish consuming the bitmap before another job is sent.
   await new Promise(r=>setTimeout(r,700));
 }
-async function createQrRasterBytes(text){
-  if(!window.QRCode) throw new Error('QR library is not loaded. Open the app while internet is available, then try again.');
-  // Generate a larger QR image for 58mm thermal printers. Approx. 28mm print width.
-  const qrSize=200, quiet=12, size=qrSize+quiet*2;
-  const holder=document.createElement('div');
-  holder.style.cssText=`position:fixed;left:-10000px;top:0;width:${qrSize}px;height:${qrSize}px;background:#fff`;
-  document.body.appendChild(holder);
-  try{
-    new QRCode(holder,{text,width:qrSize,height:qrSize,correctLevel:QRCode.CorrectLevel.M});
-    await new Promise(resolve=>setTimeout(resolve,300));
-    let source=holder.querySelector('canvas');
-    if(!source){
-      const image=holder.querySelector('img');
-      if(!image) throw new Error('Could not create QR image.');
-      if(!image.complete) await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('QR image failed to load.'))});
-      source=document.createElement('canvas'); source.width=qrSize; source.height=qrSize;
-      source.getContext('2d').drawImage(image,0,0,qrSize,qrSize);
-    }
-    const canvas=document.createElement('canvas'); canvas.width=size; canvas.height=size;
-    const ctx=canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size); ctx.imageSmoothingEnabled=false; ctx.drawImage(source,quiet,quiet,qrSize,qrSize);
-    const rgba=ctx.getImageData(0,0,size,size).data;
-    const widthBytes=Math.ceil(size/8), bitmap=new Uint8Array(widthBytes*size);
-    for(let y=0;y<size;y++) for(let x=0;x<size;x++){
-      const k=(y*size+x)*4, gray=(rgba[k]+rgba[k+1]+rgba[k+2])/3;
-      if(gray<128) bitmap[y*widthBytes+Math.floor(x/8)] |= (0x80>>(x%8));
-    }
-    // ESC/POS raster bit-image command (GS v 0); sends larger monochrome QR graphic.
-    return concatBytes(new Uint8Array([29,118,48,0,widthBytes&255,(widthBytes>>8)&255,size&255,(size>>8)&255]),bitmap);
-  }finally{holder.remove()}
+function thermalBytes(title,lines,footerRaster=null){
+  const enc=new TextEncoder();
+  const parts=[new Uint8Array([27,64]),new Uint8Array([27,97,1]),new Uint8Array([27,69,1]),enc.encode(title+'\n'),new Uint8Array([27,69,0]),enc.encode('District Office Bahawalnagar\n\n'),new Uint8Array([27,97,0]),enc.encode('--------------------------------\n'),enc.encode(lines.join('\n')+'\n')];
+  if(footerRaster)parts.push(new Uint8Array([27,97,1]),footerRaster,enc.encode('\n'));
+  parts.push(enc.encode('\n\n'),new Uint8Array([29,86,0]));
+  return concatBytes(...parts);
 }
-function thermalBytes(title,lines,qrBytes=null,qrBeforeIndex=-1){const enc=new TextEncoder(),parts=[new Uint8Array([27,64]),new Uint8Array([27,97,1]),new Uint8Array([27,69,1]),enc.encode(title+'\n'),new Uint8Array([27,69,0]),enc.encode('District Office Bahawalnagar\n\n'),new Uint8Array([27,97,0]),enc.encode('--------------------------------\n')];if(qrBytes){const i=qrBeforeIndex<0?lines.length:Math.max(0,Math.min(lines.length,qrBeforeIndex));if(i)parts.push(enc.encode(lines.slice(0,i).join('\n')+'\n'));parts.push(new Uint8Array([27,97,1]));parts.push(qrBytes);parts.push(enc.encode('\n\n'));parts.push(new Uint8Array([27,97,0]));if(i<lines.length)parts.push(enc.encode(lines.slice(i).join('\n')+'\n'));}else{parts.push(enc.encode(lines.join('\n')+'\n'));}parts.push(enc.encode('\n\n'));parts.push(new Uint8Array([29,86,0]));return concatBytes(...parts)}
-async function printThermal(tok){const r=records.find(x=>x.token===tok);if(!r){alert('Token record not found.');return}if(!printerCharacteristic){alert('Connect a compatible Bluetooth BLE thermal printer from Printer & Settings first. If your printer uses Bluetooth Classic, use Android print dialog/native ESC-POS app.');return}const lines=[`Token: ${r.token}`,`Name: ${r.name}`,`CNIC: ${maskCnic(r.cnic)}`,`Issue: ${formatDate(r.issueDate)}`,`Appointment: ${formatDate(r.visitDate)}`,'No fee is charged for this token.'];const qrText=`BISP Token: ${r.token}\nIssue date: ${r.issueDate}\nVisit date: ${r.visitDate}`;try{const qrBytes=await createQrRasterBytes(qrText);await writePrinterBytes(thermalBytes('BISP TOKEN',lines,qrBytes,5));setPrinterStatus('Token and raster QR print data sent. Check whether the QR is visible and scannable.')}catch(e){setPrinterStatus('Thermal print failed: '+(e.message||e),true);alert('Print failed. Check that the printer supports ESC/POS raster graphics and that it is connected. Details: '+(e.message||e))}}
+async function createUrduNoteRaster(text,width=384){
+  const canvas=document.createElement('canvas');
+  const pad=8,lineHeight=31,font='22px Arial';
+  const ctx=canvas.getContext('2d');
+  ctx.font=font;
+  const maxWidth=width-pad*2;
+  const lines=[];
+  for(const paragraph of text.split('\n')){
+    if(!paragraph.trim()){lines.push('');continue}
+    let line='';
+    for(const word of paragraph.split(/\s+/)){
+      const test=line?line+' '+word:word;
+      if(line&&ctx.measureText(test).width>maxWidth){lines.push(line);line=word}else{line=test}
+    }
+    if(line)lines.push(line);
+  }
+  canvas.width=width;
+  canvas.height=pad*2+lines.length*lineHeight;
+  const c=canvas.getContext('2d');
+  c.fillStyle='#fff';c.fillRect(0,0,canvas.width,canvas.height);
+  c.fillStyle='#000';c.font=font;c.textAlign='right';c.direction='rtl';
+  lines.forEach((line,i)=>c.fillText(line,width-pad,pad+(i+1)*lineHeight-5,maxWidth));
+  const rgba=c.getImageData(0,0,width,canvas.height).data;
+  const widthBytes=Math.ceil(width/8),bitmap=new Uint8Array(widthBytes*canvas.height);
+  for(let y=0;y<canvas.height;y++)for(let x=0;x<width;x++){
+    const k=(y*width+x)*4,gray=(rgba[k]+rgba[k+1]+rgba[k+2])/3;
+    if(gray<160)bitmap[y*widthBytes+Math.floor(x/8)]|=(0x80>>(x%8));
+  }
+  return concatBytes(new Uint8Array([29,118,48,0,widthBytes&255,(widthBytes>>8)&255,canvas.height&255,(canvas.height>>8)&255]),bitmap);
+}
+async function printThermal(tok){
+  const r=records.find(x=>x.token===tok);
+  if(!r){alert('Token record not found.');return}
+  if(!printerCharacteristic){alert('Connect a compatible Bluetooth BLE thermal printer from Printer & Settings first. If your printer uses Bluetooth Classic, use Android print dialog/native ESC-POS app.');return}
+  const lines=[`Token: ${r.token}`,`Name: ${r.name}`,`CNIC: ${maskCnic(r.cnic)}`,`Issue: ${formatDate(r.issueDate)}`,`Appointment: ${formatDate(r.visitDate)}`,'No fee is charged for this token.'];
+  const note='ضروری ہدایات برائے سروے\nآپ اپنی مقررہ تاریخِ سروے پر صبح 08:00 بجے دفتر پہنچیں۔ بچوں کے ب فارم اور اپنا اصل شناختی کارڈ (CNIC) لازماً ساتھ لائیں۔ بجلی کا بل، اگر موجود ہو، تو وہ بھی ساتھ لائیں۔';
+  try{
+    const noteRaster=await createUrduNoteRaster(note);
+    await writePrinterBytes(thermalBytes('BISP TOKEN',lines,noteRaster));
+    setPrinterStatus('Token printed without QR code. Urdu survey instructions raster sent to printer. Please verify the Urdu text on paper.');
+  }catch(e){
+    setPrinterStatus('Thermal print failed: '+(e.message||e),true);
+    alert('Print failed. This printer may not support raster graphics, or the connection may have dropped. Details: '+(e.message||e));
+  }
+}
 document.getElementById('testPrinterBtn').addEventListener('click',async()=>{if(!printerCharacteristic){alert('Connect a compatible BLE printer first.');return}try{await writePrinterBytes(thermalBytes('BISP PRINT TEST',['Printer connection test','District Office Bahawalnagar','If this printed, BLE text printing is working.']));setPrinterStatus('Test print sent. Check printer output.')}catch(e){setPrinterStatus('Test print failed: '+(e.message||e),true)}});
 document.getElementById('browserPrintHelpBtn').addEventListener('click',()=>alert('For a browser print: open a token and choose Print appointment slip. On Android, select your printer or print service in the system print dialog. Bluetooth Classic printers may need the manufacturer/ESC-POS Android app.'));
 // Keep the app session in this tab only. The login is a convenience gate, not secure server authentication.
